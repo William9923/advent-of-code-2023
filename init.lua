@@ -1,3 +1,3 @@
 local inspect = require("inspect")
-local hehe = {}
-print(inspect(hehe))
+print("Welcome to Advent of Code 2023")
+print("by William")
