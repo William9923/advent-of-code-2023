@@ -51,6 +51,29 @@ function determine_possible_game(game_detail)
     return true
 end
 
+function determine_fewest_cube(game_detail)
+    local current_min = {
+        ["red"] = 0,
+        ["green"] = 0,
+        ["blue"] = 0,
+    }
+    for round in game_detail:gmatch("[^;]+") do
+        local values = extract_values(round)
+        for color, value in pairs(values) do 
+            if current_min[color] < value then
+                current_min[color] = value
+            end
+        end
+    end
+
+    local total = 1
+    for _, value in pairs(current_min) do
+        total = total * value
+    end
+
+    return total
+end
+
 local file = "input.txt"
 local lines = lines_from(file)
 
@@ -58,9 +81,7 @@ local lines = lines_from(file)
 local ans = 0
 for _, line in pairs(lines) do
     local game_number, game_detail = line:match("Game (%d+): (.+)")
-    if determine_possible_game(game_detail) then
-        ans = ans + game_number
-    end
+    ans = ans + determine_fewest_cube(game_detail)
 end
 
 print(ans)
