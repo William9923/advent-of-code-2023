@@ -36,54 +36,96 @@ function convert_to_matrix(lines)
 	return matrix
 end
 
-function generate_eligible_matrix(matrix)
+function find_missing_gear(matrix)
 	local m, n = #matrix, #matrix[1]
-	local queue = Deque.new()
-	local visited = Set.new()
-
-	local eligible_matrix = {}
+	local need_to_visit = {}
 	for i = 1, m, 1 do
 		local row = {}
 		local curr = matrix[i]
 		for j = 1, n, 1 do
 			row[j] = false
-			if curr[j] ~= "." and not tonumber(curr[j]) then
-				Deque.pushright(queue, { i, j })
+			if curr[j] == "*" then
+				table.insert(need_to_visit, { i, j })
 			end
 		end
-		table.insert(eligible_matrix, row)
 	end
 
 	local directions = { { 0, 1 }, { 0, -1 }, { 1, 0 }, { -1, 0 }, { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 } }
 
-	while not Deque.isempty(queue) do
-		local loc = Deque.popleft(queue)
+	local ans = {}
+	for _, loc in ipairs(need_to_visit) do
 		local key = generate_key(loc[1], loc[2])
-		if Set.exist(visited, key) then
-			goto continue -- skip
-		end
-		Set.add(visited, key)
-		eligible_matrix[loc[1]][loc[2]] = true
-
 		for _, dir in ipairs(directions) do
 			new_r, new_c = dir[1] + loc[1], dir[2] + loc[2]
 			if new_r < 1 or new_r > m or new_c < 1 or new_c > n then
-				goto next_direction
+				goto continue
 			end
-			if Set.exist(visited, generate_key(new_r, new_c)) then
-				goto next_direction
+			if not tonumber(matrix[new_r][new_c]) then
+				goto continue
 			end
-			if matrix[new_r][new_c] == "." then
-				goto next_direction
-			end
-			Deque.pushright(queue, { new_r, new_c })
-			::next_direction::
-		end
 
-		::continue::
+			if not ans[key] then
+				ans[key] = {}
+			end
+			table.insert(ans[key], { new_r, new_c })
+			::continue::
+		end
 	end
 
-	return eligible_matrix
+	return ans
+end
+
+function extract_missing_gears(missing_gears_loc, matrix)
+	for key, locs in pairs(missing_gears_loc) do
+		local unique = Set.new()
+		local uniqueLoc = {}
+		for _, loc in ipairs(locs) do
+			local starting_point = find_starting_point(loc, matrix)
+			local key = generate_key(starting_point[1], starting_point[2])
+			if not Set.exist(unique, key) then
+				table.insert(uniqueLoc, starting_point)
+				Set.add(unique, key)
+			end
+		end
+		missing_gears_loc[key] = uniqueLoc
+	end
+
+	local filtered_out_gears_loc = {}
+	for key, locs in pairs(missing_gears_loc) do
+		if #locs == 2 then
+			filtered_out_gears_loc[key] = locs
+		end
+	end
+	return filtered_out_gears_loc
+end
+
+function calculate_missing_gear_calibration(filtered_out_gears, matrix)
+	local calibrations = {}
+	for key, locs in pairs(filtered_out_gears) do
+		local calibration = {}
+		for _, loc in pairs(locs) do
+			table.insert(calibration, get_gear_config(loc, matrix))
+		end
+		calibrations[key] = calibration
+	end
+	return calibrations
+end
+
+function find_starting_point(loc, matrix)
+	while loc[2] > 1 and tonumber(matrix[loc[1]][loc[2] - 1]) do
+		loc[2] = loc[2] - 1
+	end
+	return loc
+end
+
+function get_gear_config(loc, matrix)
+	local n = #matrix[1]
+	local ans = 0
+	while loc[2] <= n and tonumber(matrix[loc[1]][loc[2]]) do
+		ans = ans * 10 + tonumber(matrix[loc[1]][loc[2]])
+		loc[2] = loc[2] + 1
+	end
+	return ans
 end
 
 function generate_key(locX, locY)
@@ -138,7 +180,14 @@ local file = "input.txt"
 local lines = lines_from(file)
 
 local matrix = convert_to_matrix(lines)
-local eligible_matrix = generate_eligible_matrix(matrix)
-local eligible_part = extract_eligible_engine(matrix, eligible_matrix)
-print(inspect(eligible_part))
-print(sum(eligible_part))
+local missing_gear = find_missing_gear(matrix)
+local filtered_out_missing_gears = extract_missing_gears(missing_gear, matrix)
+local calibrations = calculate_missing_gear_calibration(filtered_out_missing_gears, matrix)
+local ans = 0
+for _, vals in pairs(calibrations) do
+	ans = ans + (vals[1] * vals[2])
+end
+print(ans)
+-- local eligible_part = extract_eligible_engine(matrix, eligible_matrix)
+-- print(inspect(eligible_part))
+-- print(sum(eligible_part))
