@@ -3,14 +3,9 @@ if not status_ok then
 	print("cannot import libs.io library")
 end
 
-local status_ok, tbl = pcall(require, "libs.tbl")
+local status_ok, cpart = pcall(require, "libs.part")
 if not status_ok then
-	print("cannot import libs.tbl library")
-end
-
-local status_ok, inspect = pcall(require, "inspect")
-if not status_ok then
-	print("cannot import inspect library")
+	print("cannot import libs.part library")
 end
 
 local letterToNumMap = {
@@ -97,13 +92,8 @@ function find_calibration_value_with_letter(calibration)
 	return tonumber(left .. right, 10)
 end
 
-local part = arg[1]
-if part == nil then
-	print("No part selected... (supported part: [1,2])")
-	return
-else
-	print(string.format("Part: %d", part))
-end
+local part = cpart.get_part()
+print(string.format("Part: %d", part))
 
 if part == "1" then
 	local ans = 0
