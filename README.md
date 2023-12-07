@@ -22,7 +22,12 @@ Using lua (5.4) & luarocks
 
 Running the file (pipe the input into stdin):
 ```
-cat input.txt | ./lua -l set_paths init.lua
+cat input.txt | ./lua -l set_paths day-<x>.lua <part (ex: 1 or 2)>
+```
+
+Example:
+```
+cat input.txt | ./lua -l set_paths day-1.lua 1 
 ```
 
 ## Achievement
