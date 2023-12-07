@@ -24,23 +24,54 @@ local letterToNumMap = {
 	["eight"] = 8,
 	["nine"] = 9,
 }
-function find_calibration_value(calibration)
-	local first = ""
-	local last = ""
-	for c in string.gmatch(calibration, ".") do
-		local val = tonumber(c, 10)
-		if val ~= nil then
-			if first == "" then
-				first = c
-			else
-				last = c
+
+function find_left_calibration_value(calibration)
+	for i = 1, #calibration do
+		if tonumber(string.sub(calibration, i, i)) then
+			return string.sub(calibration, i, i)
+		end
+	end
+end
+
+function find_left_calibration_value_with_letter(calibration)
+	for i = 1, #calibration do
+		if tonumber(string.sub(calibration, i, i)) then
+			return string.sub(calibration, i, i)
+		end
+
+		for key, val in pairs(letterToNumMap) do
+			if string.sub(calibration, i, i + #key - 1) == key then
+				return tostring(val)
 			end
 		end
 	end
-	if last == "" then
-		last = first
+end
+
+function find_right_calibration_value(calibration)
+	for i = #calibration, 1, -1 do
+		if tonumber(string.sub(calibration, i, i)) then
+			return string.sub(calibration, i, i)
+		end
 	end
-	return tonumber(first .. last, 10)
+end
+
+function find_right_calibration_value_with_letter(calibration)
+	for i = #calibration, 1, -1 do
+		if tonumber(string.sub(calibration, i, i)) then
+			return string.sub(calibration, i, i)
+		end
+		for key, val in pairs(letterToNumMap) do
+			if string.sub(calibration, i - #key + 1, i) == key then
+				return tostring(val)
+			end
+		end
+	end
+end
+
+function find_calibration_value(calibration)
+	local left = find_left_calibration_value(calibration)
+	local right = find_right_calibration_value(calibration)
+	return tonumber(left .. right, 10)
 end
 
 function find_occurrence(text, substring)
@@ -61,43 +92,31 @@ function find_occurrence(text, substring)
 end
 
 function find_calibration_value_with_letter(calibration)
-	local num_occurence = {}
-
-	for i = 1, 10, 1 do
-		local occurrence = find_occurrence(calibration, tostring(i))
-		for _, idx in ipairs(occurrence) do
-			num_occurence[idx] = i
-		end
-	end
-
-	for k, v in pairs(letterToNumMap) do
-		local occurrence = find_occurrence(calibration, k)
-		for _, idx in ipairs(occurrence) do
-			num_occurence[idx] = v
-		end
-	end
-
-	local first = ""
-	local last = ""
-
-	local sortedKeys = tbl.sort_keys(num_occurence)
-	for _, key in ipairs(sortedKeys) do
-		local num = num_occurence[key]
-		if first == "" then
-			first = tostring(num)
-		else
-			last = tostring(num)
-		end
-	end
-
-	if last == "" then
-		last = first
-	end
-	return tonumber(first .. last, 10)
+	local left = find_left_calibration_value_with_letter(calibration)
+	local right = find_right_calibration_value_with_letter(calibration)
+	return tonumber(left .. right, 10)
 end
 
-local ans = 0
-for _, line in pairs(cio.lines()) do
-	ans = ans + find_calibration_value_with_letter(line)
+local part = arg[1]
+if part == nil then
+	print("No part selected... (supported part: [1,2])")
+	return
+else
+	print(string.format("Part: %d", part))
 end
-print(ans)
+
+if part == "1" then
+	local ans = 0
+	for _, line in pairs(cio.lines()) do
+		ans = ans + find_calibration_value(line)
+	end
+	print(ans)
+end
+
+if part == "2" then
+	local ans = 0
+	for _, line in pairs(cio.lines()) do
+		ans = ans + find_calibration_value_with_letter(line)
+	end
+	print(ans)
+end
