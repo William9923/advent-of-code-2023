@@ -15,7 +15,7 @@ function reducer.sum(list)
 end
 
 function reducer.min(list)
-	return reducer.reducer(list, list[1], function(curr, v)
+	return reducer.reduce(list, list[1], function(curr, v)
 		if curr < v then
 			return curr
 		end
@@ -24,7 +24,7 @@ function reducer.min(list)
 end
 
 function reducer.max(list)
-	return reducer.reducer(list, list[1], function(curr, v)
+	return reducer.reduce(list, list[1], function(curr, v)
 		if curr > v then
 			return curr
 		end
@@ -33,7 +33,7 @@ function reducer.max(list)
 end
 
 function reducer.count(list)
-	return reducer.reducer(list, 0, function(curr, _)
+	return reducer.reduce(list, 0, function(curr, _)
 		return curr + 1
 	end)
 end
