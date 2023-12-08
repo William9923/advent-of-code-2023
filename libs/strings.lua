@@ -3,6 +3,11 @@ function strings.trim(text)
 	return text:match("^%s*(.-)%s*$")
 end
 
+function strings.remove_space(text)
+	local res, _ = string.gsub(text, "%s+", "")
+	return res
+end
+
 function strings.split(s, sep)
 	local fields = {}
 

@@ -14,6 +14,12 @@ function reducer.sum(list)
 	end)
 end
 
+function reducer.dot(list)
+	return reducer.reduce(list, 1, function(total, v)
+		return total * v
+	end)
+end
+
 function reducer.min(list)
 	return reducer.reduce(list, list[1], function(curr, v)
 		if curr < v then
