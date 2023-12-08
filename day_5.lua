@@ -43,6 +43,9 @@ end
 --      apply the changes
 --      if didn't return early on loop => return exact value
 -- 4. Return the min
+--
+-- For the second part, i don't think it will be that easy... => how to make it efficient is the key...
+-- How to utilize the range condition => effector will be the key...
 
 function parse_to_chunks(lines)
 	local chunks = {}
@@ -62,6 +65,25 @@ end
 function parse_seeds(line)
 	local seeds = cstrings.trim(line[1]:match("seeds%s*: (.+)"))
 	return map(cstrings.split(seeds, " "), tonumber)
+end
+
+function parse_seeds_v2(line)
+	local seed_line_raw = cstrings.trim(line[1]:match("seeds%s*: (.+)"))
+	local seed_line = map(cstrings.split(seed_line_raw, " "), tonumber)
+	local seeds = {}
+
+	local seed = 0
+	for i, seed_r in ipairs(seed_line) do
+		if i % 2 == 0 then
+			for seeder = seed, seed + seed_r - 1, 1 do
+				table.insert(seeds, seeder)
+			end
+		else
+			seed = seed_r
+		end
+	end
+
+	return seeds
 end
 
 function map(tbl, fn)
@@ -98,15 +120,26 @@ function map_result(mapper, value)
 	return value
 end
 
-local input_chunks = parse_to_chunks(cio.lines())
-local seeds = parse_seeds(input_chunks[1])
+local input_chunks = nil
+if part == "1" then
+	input_chunks = parse_to_chunks(cio.lines())
+end
+
+if part == "2" then
+	input_chunks = parse_to_chunks_v2(cio.lines())
+end
+
+local seeds = parse_seeds_v2(input_chunks[1])
 local mappers = {}
 for i = 2, #input_chunks, 1 do
 	table.insert(mappers, parse_mapper(input_chunks[i]))
 end
 
+local part = cpart.get_part()
+print(string.format("Part: %d", part))
+
 local locations = {}
-for i, seed in pairs(seeds) do
+for _, seed in pairs(seeds) do
 	local location = seed
 	for _, mapper in ipairs(mappers) do
 		location = map_result(mapper, location)
