@@ -47,6 +47,15 @@ end
 -- - Pop each heap (using min heap) -> then count how many pop (as rank)
 -- - Use the rank / count & bid value to calculate total winnings…
 
+--  2nd part => Joker Logic...
+-- Problem is easy => add to most max one => since it will automatically upgrade the value?
+-- The difficulity is from three of a kind => full house
+-- But, if there are three of a kind => automatically be four of a kind
+-- If there are full house with 2 J => automatically be five of a kind
+-- if there are 4 of a kind with J => automatically be five of a kind
+-- Is there possibility from 2 pair => full house (yes, but no need different approach)
+-- 1 + 2 + 2J => 1 + 4 pair, yea let's go i guess
+
 local part = cpart.get_part()
 print(string.format("Part: %d", part))
 
@@ -61,7 +70,37 @@ function parse_camel_cards(lines)
 	return datas
 end
 
-function determine_cards_type(cards)
+function no_joker_callback(mem)
+	return mem
+end
+
+function with_joker_callback(mem)
+	local count_joker = mem["J"]
+	if not count_joker then
+		return mem
+	end
+
+	if count_joker == 5 then
+		return mem
+	end
+
+	local label = ""
+	local curr = 0
+	for k, v in pairs(mem) do
+		if k ~= "J" then
+			if v > curr then
+				label = k
+				curr = v
+			end
+		end
+	end
+
+	mem["J"] = nil
+	mem[label] = mem[label] + count_joker
+	return mem
+end
+
+function determine_cards_type(cards, post_count_callback)
 	mem = {}
 	for i = 1, #cards, 1 do
 		local curr = string.sub(cards, i, i)
@@ -70,6 +109,8 @@ function determine_cards_type(cards)
 		end
 		mem[curr] = mem[curr] + 1
 	end
+
+	mem = post_count_callback(mem)
 
 	if is_five_of_a_kind(mem) then
 		return 6
@@ -149,11 +190,27 @@ local card_values = {
 	["2"] = 2,
 }
 
-function determine_card_values(cards)
+local card_values_v2 = {
+	["A"] = 14,
+	["K"] = 13,
+	["Q"] = 12,
+	["T"] = 10,
+	["9"] = 9,
+	["8"] = 8,
+	["7"] = 7,
+	["6"] = 6,
+	["5"] = 5,
+	["4"] = 4,
+	["3"] = 3,
+	["2"] = 2,
+	["J"] = -1,
+}
+
+function determine_card_values(cards, card_valuer)
 	local values = {}
 	for i = 1, #cards, 1 do
 		local curr = string.sub(cards, i, i)
-		table.insert(values, card_values[curr])
+		table.insert(values, card_valuer[curr])
 	end
 	return values
 end
@@ -174,23 +231,48 @@ function camel_card_comparer(a, b)
 	return a[1] > b[1]
 end
 
-local datas = parse_camel_cards(cio.lines())
-local h = heap.new(camel_card_comparer)
-for _, game_data in pairs(datas) do
-	local hand = determine_cards_type(game_data[1])
-	local hand_values = determine_card_values(game_data[1])
+if part == "1" then
+	local datas = parse_camel_cards(cio.lines())
+	local h = heap.new(camel_card_comparer)
+	for _, game_data in pairs(datas) do
+		local hand = determine_cards_type(game_data[1], no_joker_callback)
+		local hand_values = determine_card_values(game_data[1], card_values)
 
-	heap.insert(h, { hand, hand_values, game_data[2] })
+		heap.insert(h, { hand, hand_values, game_data[2] })
+	end
+
+	local winnings = {}
+	local rank = 1
+	while heap.size(h) > 0 do
+		local game = heap.pop(h)
+		assert(game)
+		table.insert(winnings, game[3] * rank)
+		rank = rank + 1
+	end
+
+	print(inspect(winnings))
+	print(reducer.sum(winnings))
 end
 
-local winnings = {}
-local rank = 1
-while heap.size(h) > 0 do
-	local game = heap.pop(h)
-	assert(game)
-	table.insert(winnings, game[3] * rank)
-	rank = rank + 1
-end
+if part == "2" then
+	local datas = parse_camel_cards(cio.lines())
+	local h = heap.new(camel_card_comparer)
+	for _, game_data in pairs(datas) do
+		local hand = determine_cards_type(game_data[1], with_joker_callback)
+		local hand_values = determine_card_values(game_data[1], card_values_v2)
 
-print(inspect(winnings))
-print(reducer.sum(winnings))
+		heap.insert(h, { hand, hand_values, game_data[2] })
+	end
+
+	local winnings = {}
+	local rank = 1
+	while heap.size(h) > 0 do
+		local game = heap.pop(h)
+		assert(game)
+		table.insert(winnings, game[3] * rank)
+		rank = rank + 1
+	end
+
+	print(inspect(winnings))
+	print(reducer.sum(winnings))
+end
