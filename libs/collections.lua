@@ -17,4 +17,13 @@ function collections.map(tbl, fn)
 	return t
 end
 
+function collections.all(tbl, fn)
+	for _, v in pairs(tbl) do
+		if not fn(v) then
+			return false
+		end
+	end
+	return true
+end
+
 return collections
