@@ -26,4 +26,13 @@ function collections.all(tbl, fn)
 	return true
 end
 
+function collections.any(tbl, fn)
+	for _, v in pairs(tbl) do
+		if fn(v) then
+			return true
+		end
+	end
+	return false
+end
+
 return collections

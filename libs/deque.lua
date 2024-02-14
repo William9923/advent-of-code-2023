@@ -41,4 +41,8 @@ function deque.isempty(list)
 	return list.first > list.last
 end
 
+function deque.length(list)
+	return list.last - list.first + 1
+end
+
 return deque
